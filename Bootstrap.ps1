@@ -10,6 +10,7 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 # Init web client
 $wc = New-Object System.Net.WebClient
 $wc.Headers.Add("Cache-Control", "no-cache")
+$wc.Headers.Add("Pragma", "no-cache")
 
 # It might be odd using HTTP here, but we're not really transferring sensitive data
 # Also I've had instances where TLS just refuses to work in CyberPatriot and OKCup
