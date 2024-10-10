@@ -47,7 +47,14 @@ function Reset-LocalUserGroups {
 
     try {
         # Fetch all groups the user is a member of
-        $userGroups = Get-LocalGroupMember -Member $Name | Select-Object -ExpandProperty Group
+        $userGroups = @()
+
+        foreach ($group in Get-LocalGroup) {
+            $members = Get-LocalGroupMember -Group $group.Name
+            if ($members -contains $Name) { # fuck you microsoft god fucking damn it
+                $userGroups += $group
+            }
+        }
 
         # Check each group to see if it's expected, and remove if not
         foreach ($group in $userGroups) {
@@ -86,8 +93,8 @@ function Reset-LocalUserPassword {
             Write-Host "Changing password for $Name and set pw props"
             Set-LocalUser -Name $Name `
                 -Password (ConvertTo-SecureString -String $password -AsPlainText -Force) `
-                -PasswordNeverExpires $false `  # Allow password to expire; user must change it on first login
-                -UserMayChangePassword $true    # User is allowed to change their password
+                -PasswordNeverExpires $false `
+                -UserMayChangePassword $true
         }
         catch {
             Write-Error "Error occurred: $_"
@@ -112,7 +119,7 @@ function Reset-LocalUserPassword {
 # For all users, secure them
 foreach ($user in $authUsers) {
     Reset-LocalUserGroups -Name $user -ExpectedGroups @("Users")
-    Reset-UserPassword -Name $user
+    Reset-LocalUserPassword -Name $user
 }
 
 # For all administrators, secure them
@@ -122,13 +129,13 @@ foreach ($admin in $authAdmins) {
 }
 
 # We typically want to disable Administrator and Guest
-$builtinUsersToDisable = @("Administrator", "Guest", "DefaultAccount", "WDAGUtilityAccount")
+$builtinUsersToDisable = @("Administrator", "Guest", "DefaultAccount")
 
 # Disable all unauthorized users.
 foreach ($user in $unauthorizedUsers + $builtinUsersToDisable) {
-    Write-Host "Disabling user $($user.Name)"
+    Write-Host "Disabling user $($user)"
     try {
-        Disable-LocalUser -Name $user.Name
+        Disable-LocalUser -Name $user
     }
     catch {
         Write-Error "Error occurred: $_"
