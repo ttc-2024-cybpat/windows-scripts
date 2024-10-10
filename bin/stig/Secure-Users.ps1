@@ -104,7 +104,7 @@ function Reset-LocalUserPassword {
             Write-Error "Error occurred: $_"
         }
     }
-    try {
+    catch {
         Write-Error "Error occurred: $_"
     }
 }
