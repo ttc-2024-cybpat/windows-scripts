@@ -9,6 +9,7 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Init web client
 $wc = New-Object System.Net.WebClient
+$wc.CachePolicy = New-Object System.Net.Cache.RequestCachePolicy([System.Net.Cache.RequestCacheLevel]::NoCacheNoStore)
 $wc.Headers.Add("Cache-Control", "no-cache")
 $wc.Headers.Add("Pragma", "no-cache")
 
@@ -40,7 +41,7 @@ if (Test-Path $outPath) {
 
 # Pull zip file straight from GitHub
 try {
-    Write-Host "Downloading latest scripts from GitHub (${repoName}@${branch}) to ${zipPath}..."
+    Write-Host "Downloading latest scripts from GitHub (${repoName}@${branch})..."
     $wc.DownloadFile("http://github.com/${repo}/archive/refs/heads/${branch}.zip", $zipPath)
 }
 catch {
