@@ -51,7 +51,7 @@ catch {
 # Unzip the file
 try {
     Write-Host "Unzipping to $outPath..."
-    Expand-Archive -Path $tempOut -DestinationPath [System.Environment]::GetFolderPath("Desktop")
+    Expand-Archive -Path $zipPath -DestinationPath $tempOut
 }
 catch {
     Write-Host "Failed to unzip scripts." -ForegroundColor Red
