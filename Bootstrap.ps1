@@ -52,7 +52,7 @@ catch {
 
 # Unzip the file
 try {
-    Write-Host "Unzipping to $tempOut..."
+    Write-Host "Unzipping scripts..."
     Expand-Archive -Path $zipPath -DestinationPath $tempOut
 }
 catch {
