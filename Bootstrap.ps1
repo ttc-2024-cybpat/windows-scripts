@@ -39,8 +39,8 @@ if (Test-Path $outPath) {
 
 # Pull zip file straight from GitHub
 try {
-    Write-Host "Downloading latest scripts from GitHub..."
-    $wc.DownloadFile("http://github.com/$repo/archive/refs/heads/$branch.zip", $zipPath)
+    Write-Host "Downloading latest scripts from GitHub (${repoName}@${branch}) to ${zipPath}..."
+    $wc.DownloadFile("http://github.com/${repo}/archive/refs/heads/${branch}.zip", $zipPath)
 }
 catch {
     Write-Host "Failed to download scripts from GitHub." -ForegroundColor Red
@@ -50,7 +50,7 @@ catch {
 
 # Unzip the file
 try {
-    Write-Host "Unzipping to $outPath..."
+    Write-Host "Unzipping to $tempOut..."
     Expand-Archive -Path $zipPath -DestinationPath $tempOut
 }
 catch {
