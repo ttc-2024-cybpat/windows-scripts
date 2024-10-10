@@ -3,6 +3,7 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Init web client
 $wc = New-Object System.Net.WebClient
+$wc.Headers.Add("Cache-Control", "no-cache")
 
 # Check if admin
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -14,7 +15,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     $wc.DownloadFile($script, $scriptPath)
 
     Start-Process -FilePath "powershell.exe" -ArgumentList "-File $scriptPath" -Verb RunAs
-    exit 1
+    #exit 1
 }
 
 # Create zip paths
