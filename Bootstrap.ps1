@@ -15,7 +15,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     $wc.DownloadFile($script, $scriptPath)
 
     Start-Process -FilePath "powershell.exe" -ArgumentList "-File $scriptPath" -Verb RunAs
-    #exit 1
+    exit 1
 }
 
 # Create zip paths
