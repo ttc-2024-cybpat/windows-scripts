@@ -11,10 +11,13 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 $wc = New-Object System.Net.WebClient
 $wc.Headers.Add("Cache-Control", "no-cache")
 
+# It might be odd using HTTP here, but we're not really transferring sensitive data
+# Also I've had instances where TLS just refuses to work in CyberPatriot and OKCup
+
 # Check if admin
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     # Restart with runas; download this script to a temp path and restart
-    $script = "https://github.com/$repo/raw/$branch/Bootstrap.ps1"
+    $script = "http://github.com/$repo/raw/$branch/Bootstrap.ps1"
     $scriptPath = [System.IO.Path]::Combine($env:TEMP, (New-Guid).ToString("N") + ".ps1")
 
     Write-Host "Restarting with elevated privileges..." -ForegroundColor Yellow
@@ -27,7 +30,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Create zip paths
 $zipPath = [System.IO.Path]::Combine($env:TEMP, (New-Guid).ToString("N") + ".zip")
 $outPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "cybpat-scripts")
-$initialOutPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "$repoName-$branch")
+$tempOut = [System.IO.Path]::Combine($env:TEMP, (New-Guid).ToString("N"))
 
 # Delete outPath if it exists
 if (Test-Path $outPath) {
@@ -37,7 +40,7 @@ if (Test-Path $outPath) {
 # Pull zip file straight from GitHub
 try {
     Write-Host "Downloading latest scripts from GitHub..."
-    $wc.DownloadFile("https://github.com/$repo/archive/refs/heads/$branch.zip", $zipPath)
+    $wc.DownloadFile("http://github.com/$repo/archive/refs/heads/$branch.zip", $zipPath)
 }
 catch {
     Write-Host "Failed to download scripts from GitHub." -ForegroundColor Red
@@ -48,7 +51,7 @@ catch {
 # Unzip the file
 try {
     Write-Host "Unzipping to $outPath..."
-    Expand-Archive -Path $zipPath -DestinationPath [System.Environment]::GetFolderPath("Desktop")
+    Expand-Archive -Path $tempOut -DestinationPath [System.Environment]::GetFolderPath("Desktop")
 }
 catch {
     Write-Host "Failed to unzip scripts." -ForegroundColor Red
@@ -56,12 +59,13 @@ catch {
     exit 1
 }
 
-# Rename the directory
-Rename-Item -Path $initialOutPath -NewName "cybpat-scripts" -Force
+# Move the contents to the desktop
+Move-Item -Path "$tempOut\$repoName-$branch" -Destination $outPath -Force
 
 # Clean up
 Write-Host "Deleting zip file..."
 Remove-Item -Path $zipPath -Force
+Remove-Item -Path $tempOut -Recurse -Force
 
 # Check for existing PowerShell 7
 if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
@@ -70,7 +74,7 @@ if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
     try {
         # Determine PowerShell type to download
         $arch = if ([System.Environment]::Is64BitOperatingSystem) { "win-x64" } else { "win-x86" }
-        $url = "https://github.com/PowerShell/PowerShell/releases/download/v7.4.5/PowerShell-7.4.5-$arch.msi"
+        $url = "http://github.com/PowerShell/PowerShell/releases/download/v7.4.5/PowerShell-7.4.5-$arch.msi"
 
         # Download the installer
         Write-Host "Downloading PowerShell 7 $arch installer..."
