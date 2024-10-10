@@ -21,6 +21,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Create zip paths
 $zipPath = [System.IO.Path]::Combine($env:TEMP, (New-Guid).ToString("N") + ".zip")
 $outPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "cybpat-scripts")
+$initialOutPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "windows-scripts-main")
 
 # Delete outPath if it exists
 if (Test-Path $outPath) {
@@ -41,13 +42,16 @@ catch {
 # Unzip the file
 try {
     Write-Host "Unzipping to $outPath..."
-    Expand-Archive -Path $zipPath -DestinationPath $outPath
+    Expand-Archive -Path $zipPath -DestinationPath [System.Environment]::GetFolderPath("Desktop")
 }
 catch {
     Write-Host "Failed to unzip scripts." -ForegroundColor Red
     Read-Host "Press any key to continue..."
     exit 1
 }
+
+# Rename the directory
+Rename-Item -Path $initialOutPath -NewName "cybpat-scripts" -Force
 
 # Clean up
 Write-Host "Deleting zip file..."
