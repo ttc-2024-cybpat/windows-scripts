@@ -1,3 +1,9 @@
+$repo = "ttc-2024-cybpat/windows-scripts"
+$branch = "main"
+
+# Repository name only
+$repoName = $repo.Split("/")[1]
+
 # Set up execution policy
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
@@ -8,7 +14,7 @@ $wc.Headers.Add("Cache-Control", "no-cache")
 # Check if admin
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     # Restart with runas; download this script to a temp path and restart
-    $script = "https://github.com/ttc-2024-cybpat/windows-scripts/raw/main/Bootstrap.ps1"
+    $script = "https://github.com/$repo/raw/$branch/Bootstrap.ps1"
     $scriptPath = [System.IO.Path]::Combine($env:TEMP, (New-Guid).ToString("N") + ".ps1")
 
     Write-Host "Restarting with elevated privileges..." -ForegroundColor Yellow
@@ -21,7 +27,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Create zip paths
 $zipPath = [System.IO.Path]::Combine($env:TEMP, (New-Guid).ToString("N") + ".zip")
 $outPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "cybpat-scripts")
-$initialOutPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "windows-scripts-main")
+$initialOutPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Desktop"), "$repoName-$branch")
 
 # Delete outPath if it exists
 if (Test-Path $outPath) {
@@ -31,7 +37,7 @@ if (Test-Path $outPath) {
 # Pull zip file straight from GitHub
 try {
     Write-Host "Downloading latest scripts from GitHub..."
-    $wc.DownloadFile("https://github.com/ttc-2024-cybpat/windows-scripts/archive/refs/heads/main.zip", $zipPath)
+    $wc.DownloadFile("https://github.com/$repo/archive/refs/heads/$branch.zip", $zipPath)
 }
 catch {
     Write-Host "Failed to download scripts from GitHub." -ForegroundColor Red
