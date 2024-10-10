@@ -1,3 +1,5 @@
+Write-Host "Make sure to refresh the group policy settings and reboot if Windows Defender was disabled." -ForegroundColor Yellow
+
 # Enable real-time protection
 Set-MpPreference -DisableRealtimeMonitoring 0 `
     -DisableBehaviorMonitoring 0 `
