@@ -41,36 +41,37 @@ if ($response -notmatch "^[Yy]") {
 # Remove user from unauthorized groups
 function Reset-LocalUserGroups {
     param (
-        [string]$Name,
-        [string[]]$ExpectedGroups
+        [string]$Name,                    # The username
+        [string[]]$ExpectedGroups         # List of groups the user should be in
     )
 
-    try {
-        # Fetch all groups the user is a member of
-        $userGroups = @()
-
-        foreach ($group in Get-LocalGroup) {
-            $members = Get-LocalGroupMember -Group $group.Name
-            if ($members -contains $Name) { # fuck you microsoft god fucking damn it
-                $userGroups += $group
-            }
-        }
-
-        # Check each group to see if it's expected, and remove if not
-        foreach ($group in $userGroups) {
-            if ($ExpectedGroups -notcontains $group.Name) {
-                Write-Host "Removing $Name from group $($group.Name)"
-                try {
-                    Remove-LocalGroupMember -Group $group.Name -Member $Name
-                }
-                catch {
-                    Write-Error "Error occurred: $_"
-                }
-            }
+    # Get the user's current group memberships
+    $currentGroups = Get-LocalGroup | ForEach-Object {
+        $group = $_
+        #Write-Host "Checking $Name in $($group.Name)"
+        if (Get-LocalGroupMember -Group $group.Name -Member $Name -ErrorAction SilentlyContinue) {
+            $group.Name
         }
     }
-    catch {
-        Write-Error "Error occurred: $_"
+
+    # List current groups
+    Write-Host "Current groups for ${Name}: " -ForegroundColor Magenta -NoNewline
+    Write-Host ($currentGroups ?? "<empty>") # wy the FUCK IS THIS EMPTY IMNI ABIOUT OPUBCGH THIS FUCIKBNG MOINITOR
+
+    # Remove the user from groups they are not expected to be in
+    foreach ($group in $currentGroups) {
+        if ($group -notin $ExpectedGroups) {
+            Write-Host "Removing $Name from $group"
+            Remove-LocalGroupMember -Group $group -Member $Name
+        }
+    }
+
+    # Add the user to any missing expected groups
+    foreach ($expectedGroup in $ExpectedGroups) {
+        if ($expectedGroup -notin $currentGroups) {
+            Write-Host "Adding $Name to $expectedGroup"
+            Add-LocalGroupMember -Group $expectedGroup -Member $Name
+        }
     }
 }
 
@@ -128,16 +129,17 @@ foreach ($admin in $authAdmins) {
     Reset-LocalUserPassword -Name $admin
 }
 
+# For all unauthorized users, secure them
+foreach ($user in $unauthorizedUsers) {
+    Reset-LocalUserGroups -Name $user.Name -ExpectedGroups @("Users")
+    Disable-LocalUser -Name $user
+}
+
 # We typically want to disable Administrator and Guest
 $builtinUsersToDisable = @("Administrator", "Guest", "DefaultAccount")
 
 # Disable all unauthorized users.
-foreach ($user in $unauthorizedUsers + $builtinUsersToDisable) {
+foreach ($user in $builtinUsersToDisable) {
     Write-Host "Disabling user $($user)"
-    try {
-        Disable-LocalUser -Name $user
-    }
-    catch {
-        Write-Error "Error occurred: $_"
-    }
+    Disable-LocalUser -Name $user
 }
